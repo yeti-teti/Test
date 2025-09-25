@@ -1,0 +1,27 @@
+# LangChain core
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-pinecone
+langchain-experimental
+
+# Vector database
+pinecone[grpc]
+pinecone-client
+
+# Embeddings
+sentence-transformers==2.2.2
+
+# Document loading + splitting
+pypdf
+
+# OpenAI API
+openai
+
+# Flask (for UI phase)
+flask
+
+python-dotenv
+
+-e .
