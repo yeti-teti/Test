@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Medical Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <header class="chat-header">
+      <h2>💬 Medical Chatbot</h2>
+    </header>
+
+    <main class="chat-box" id="chat-box">
+      <!-- Messages will be appended here -->
+    </main>
+
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="user-input" placeholder="Ask anything" required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const chatForm = document.getElementById("chat-form");
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = userInput.value.trim();
+      if (!msg) return;
+
+      // Show user message
+      chatBox.innerHTML += `<div class="message user">${msg}</div>`;
+      userInput.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        // Call Flask backend at /ask
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: msg })
+        });
+
+        const data = await res.json();
+
+        // Show bot reply
+        chatBox.innerHTML += `<div class="message bot">${data.answer}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (error) {
+        chatBox.innerHTML += `<div class="message bot error">⚠️ Error: Could not reach server</div>`;
+      }
+    });
+  </script>
+</body>
+</html>
