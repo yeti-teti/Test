@@ -1,28 +1,30 @@
 # LangChain core
-langchain==0.3.27
-langchain-core==0.3.29
-langchain-community==0.3.14
-langchain-openai==0.3.33
-langchain-pinecone==0.2.12
-langchain-experimental==0.3.4
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-pinecone
+langchain-experimental
 
 # Vector database
-pinecone[grpc]==5.3.1
-pinecone-client==6.0.0   # Deprecated, consider migrating to pinecone>=5.x
+pinecone[grpc]
+pinecone-client 
 
 # Embeddings
-sentence-transformers==5.1.1
-huggingface-hub==0.35.1
+sentence-transformers
+huggingface-hub
 
 # Document loading + splitting
-pypdf==5.1.0
+pypdf
 
 # OpenAI API
-openai==1.109.1
+openai
 
-# Flask (for UI phase)
-Flask==3.1.2
-python-dotenv==1.1.1
+Flask
+python-dotenv
 
+# Evaluation
+ragas==0.2.10
+datasets==3.2.0
 
--e .
+# -e .

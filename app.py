@@ -1,4 +1,4 @@
-from flask import Flask, render_template,jsonify,request
+from flask import Flask, render_template,jsonify,request, session
 from langchain_openai import OpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -9,10 +9,12 @@ from src.helper import download_hugging_face_embeddings
 from src.prompt import *
 from openai import OpenAI
 import os
+import uuid
 
 app= Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "default_secret_key")
 
-load_dotenv(dotenv_path="D:/Capstone/MedicalChatbot/.env")
+load_dotenv(".env")
 api_key = os.getenv("OPENAI_API_KEY")
 project_id = os.getenv("OPENAI_PROJECT")
 
@@ -35,8 +37,14 @@ docsearch=PineconeVectorStore.from_existing_index(
 
 retriever= docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3})
 
-# Build chain from prompt.py
-rag_chain = build_rag_chain(retriever)
+# Global chain storage for conversational memory
+chains = {}
+
+def get_or_create_chain(session_id):
+    """Get or create a conversational chain for the session."""
+    if session_id not in chains:
+        chains[session_id] = build_conversational_rag_chain(retriever)
+    return chains[session_id]
 
 # === Small talk handler ===
 def handle_small_talk(msg: str):
@@ -61,13 +69,20 @@ def index():
 def ask():
     msg = request.json.get("query")  # expecting JSON {"query": "..."}
 
+    # Ensure session ID
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+
+    session_id = session['session_id']
+
     # Step 1: Check small talk first
     smalltalk_reply = handle_small_talk(msg)
     if smalltalk_reply:
         return jsonify({"answer": smalltalk_reply})
 
-    # Step 2: Otherwise, call the RAG pipeline
-    response = rag_chain.invoke({"input": msg})
+    # Step 2: Use conversational RAG chain
+    rag_chain = get_or_create_chain(session_id)
+    response = rag_chain({"question": msg})
     return jsonify({"answer": response["answer"]})
 
 if __name__ == "__main__":
