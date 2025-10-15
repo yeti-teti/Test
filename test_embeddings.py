@@ -4,6 +4,7 @@ Compares retrieval performance between models using test queries.
 """
 import os
 import re
+import time
 from dotenv import load_dotenv
 from src.helper import load_pdf_file, text_split, download_hugging_face_embeddings
 from langchain_pinecone import PineconeVectorStore
@@ -48,6 +49,14 @@ def create_test_index(model_name, dimension):
         metric="cosine",
         spec=ServerlessSpec(cloud="aws", region="us-east-1"),
     )
+
+    # Wait for the serverless index to be ready before upserting documents
+    while True:
+        status = pc.describe_index(index_name).status
+        if status.get("ready"):
+            break
+        time.sleep(2)
+
     return index_name
 
 def evaluate_model(model_name):
@@ -85,6 +94,7 @@ def evaluate_model(model_name):
     for query in TEST_QUERIES:
         docs = retriever.get_relevant_documents(query)
         results[query] = [doc.page_content[:200] + "..." for doc in docs]  # First 200 chars
+        print(f"Retrieved {len(docs)} docs for '{query}' using {model_name}")
 
     # Clean up (optional, comment out if you want to keep for inspection)
     pc = Pinecone(api_key=PINECONE_API_KEY)
