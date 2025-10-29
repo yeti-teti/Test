@@ -69,7 +69,9 @@ A Retrieval-Augmented Generation (RAG) medical chatbot that answers questions us
 
 **`src/download_qa_dataset.py`** - Evaluation dataset downloader
 - Downloads MedQA, PubMedQA, HealthQA from HuggingFace
+- Downloads MedQuAD (47,457 QA pairs from 12 NIH sources) from GitHub
 - Creates expanded QA dataset for RAGAS evaluation
+- Saves MedQuAD to `Data/medquad_dataset.json` for indexing
 - Falls back to synthetic dataset if downloads fail
 - Outputs: `docs/evaluation/qa_dataset_expanded.json`
 
@@ -100,6 +102,11 @@ A Retrieval-Augmented Generation (RAG) medical chatbot that answers questions us
 **`Data/medical_conditions.json`** - Example JSON dataset
 
 **`Data/medical_diseases.csv`** - Example CSV dataset
+
+**`Data/medquad_dataset.json`** - MedQuAD dataset (created by download script)
+- Contains 47,457 QA pairs from 12 NIH sources
+- Created when running `python src/download_qa_dataset.py`
+- Can be indexed via `store_index.py` for use as knowledge source
 
 **`Data/.mcp_metadata.json`** - MCP metadata persistence (auto-generated)
 
@@ -160,7 +167,26 @@ Check `Data/` directory contains files:
 
 **Why**: These files are indexed and used as knowledge sources.
 
-### Step 6: Create Vector Index
+### Step 6: (Optional) Download MedQuAD Dataset
+```bash
+python src/download_qa_dataset.py
+```
+
+**Why**: 
+- Downloads MedQuAD (47,457 QA pairs from 12 NIH sources) from GitHub
+- Creates expanded evaluation dataset (`docs/evaluation/qa_dataset_expanded.json`)
+- Saves full MedQuAD dataset to `Data/medquad_dataset.json` for indexing
+- Adds 10,000+ QA pairs for evaluation
+
+**Expected output:**
+```
+Downloading MedQuAD dataset from GitHub...
+Successfully loaded 16407 QA pairs from MedQuAD
+Saved 16407 QA pairs to Data/medquad_dataset.json
+Total QA pairs created: 10000
+```
+
+### Step 7: Create Vector Index
 ```bash
 python store_index.py
 ```
@@ -182,7 +208,7 @@ Uploading embeddings to Pinecone...
 Indexing complete!
 ```
 
-### Step 7: Start Application
+### Step 8: Start Application
 ```bash
 python app.py
 ```
@@ -194,7 +220,7 @@ Expected output:
  * Running on http://127.0.0.1:8080
 ```
 
-### Step 8: Access Web Interface
+### Step 9: Access Web Interface
 Open browser: `http://localhost:8080`
 
 **Why**: Provides user interface for chat interactions.

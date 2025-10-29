@@ -1,13 +1,18 @@
 """
 Script to download and prepare larger medical QA datasets for evaluation.
 
-This script downloads medical QA datasets from HuggingFace and formats them
-for use in RAGAS evaluation.
+This script downloads medical QA datasets from HuggingFace and MedQuAD from GitHub,
+and formats them for use in RAGAS evaluation.
 """
 
 import json
-from datasets import load_dataset
+import xml.etree.ElementTree as ET
+import urllib.request
+import zipfile
 from pathlib import Path
+from datasets import load_dataset
+import os
+import tempfile
 
 def download_medqa_dataset():
     """Download MedQA dataset from HuggingFace."""
@@ -67,6 +72,144 @@ def download_pubmedqa_dataset():
         print(f"Error loading PubMedQA: {e}")
         return None
 
+def download_medquad_dataset():
+    """Download and parse MedQuAD dataset from GitHub (47,457 QA pairs from 12 NIH sources)."""
+    try:
+        print("Downloading MedQuAD dataset from GitHub...")
+        
+        medquad_url = "https://github.com/abachaa/MedQuAD/archive/refs/heads/master.zip"
+        output_path = Path(__file__).parent.parent / "docs" / "evaluation"
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        temp_dir = tempfile.mkdtemp()
+        zip_path = os.path.join(temp_dir, "medquad.zip")
+        
+        print(f"Downloading from {medquad_url}...")
+        urllib.request.urlretrieve(medquad_url, zip_path)
+        
+        print("Extracting MedQuAD archive...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(temp_dir)
+        
+        medquad_dir = os.path.join(temp_dir, "MedQuAD-master")
+        
+        qa_pairs = []
+        
+        # List of all 12 MedQuAD collections
+        collections = [
+            "1_CancerGov_QA",
+            "2_GARD_QA",
+            "3_GHR_QA",
+            "4_MPlus_Health_Topics_QA",
+            "5_NIDDK_QA",
+            "6_NINDS_QA",
+            "7_SeniorHealth_QA",
+            "8_NHLBI_QA_XML",
+            "9_CDC_QA",
+            "10_MPlus_ADAM_QA",
+            "11_MPlusDrugs_QA",
+            "12_MPlusHerbsSupplements_QA"
+        ]
+        
+        for collection in collections:
+            collection_path = os.path.join(medquad_dir, collection)
+            if not os.path.exists(collection_path):
+                print(f"Warning: Collection {collection} not found, skipping...")
+                continue
+            
+            print(f"Processing {collection}...")
+            xml_files = list(Path(collection_path).glob("*.xml"))
+            
+            if not xml_files:
+                print(f"  No XML files found in {collection}")
+                continue
+            
+            collection_count = 0
+            for xml_file in xml_files:
+                try:
+                    tree = ET.parse(xml_file)
+                    root = tree.getroot()
+                    
+                    # Parse XML structure - MedQuAD format
+                    items = root.findall('.//QAPair')
+                    if not items:
+                        items = root.findall('.//QA')
+                    if not items:
+                        items = root.findall('.//document')
+                    if not items:
+                        items = root.findall('.//item')
+                    
+                    for item in items:
+                        question = ""
+                        answer = ""
+                        
+                        # Try different element names for question
+                        question_elem = item.find('Question')
+                        if question_elem is None:
+                            question_elem = item.find('question')
+                        if question_elem is None:
+                            question_elem = item.find('Q')
+                        if question_elem is not None:
+                            question = (question_elem.text or "").strip()
+                        
+                        # Try different element names for answer
+                        answer_elem = item.find('Answer')
+                        if answer_elem is None:
+                            answer_elem = item.find('answer')
+                        if answer_elem is None:
+                            answer_elem = item.find('A')
+                        if answer_elem is not None:
+                            answer = (answer_elem.text or "").strip()
+                        
+                        # Try findtext as fallback
+                        if not question:
+                            question = (item.findtext('Question') or item.findtext('question') or item.findtext('Q') or "").strip()
+                        if not answer:
+                            answer = (item.findtext('Answer') or item.findtext('answer') or item.findtext('A') or "").strip()
+                        
+                        # Try attributes as fallback
+                        if not question:
+                            question = (item.get('question', '') or item.get('Question', '') or "").strip()
+                        if not answer:
+                            answer = (item.get('answer', '') or item.get('Answer', '') or "").strip()
+                        
+                        if question and answer:
+                            qa_pairs.append({
+                                "question": question,
+                                "ground_truth": answer
+                            })
+                            collection_count += 1
+                    
+                except Exception as e:
+                    print(f"  Error parsing {xml_file.name}: {e}")
+                    continue
+            
+            print(f"  Added {collection_count} pairs from {collection}")
+        
+        # Cleanup
+        import shutil
+        shutil.rmtree(temp_dir)
+        
+        print(f"Successfully loaded {len(qa_pairs)} QA pairs from MedQuAD")
+        
+        # Also save full dataset to Data/ directory for indexing
+        data_dir = Path(__file__).parent.parent / "Data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        medquad_data_path = data_dir / "medquad_dataset.json"
+        
+        print(f"Saving MedQuAD dataset to {medquad_data_path}...")
+        with open(medquad_data_path, 'w') as f:
+            json.dump(qa_pairs, f, indent=2)
+        print(f"Saved {len(qa_pairs)} QA pairs to Data/medquad_dataset.json")
+        
+        return qa_pairs[:10000]  # Limit to 10,000 for evaluation manageability
+        
+    except Exception as e:
+        print(f"Error downloading MedQuAD: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
 def download_healthqa_dataset():
     """Download HealthQA dataset from HuggingFace."""
     try:
@@ -114,6 +257,12 @@ def create_expanded_qa_dataset():
     if healthqa_pairs:
         all_pairs.extend(healthqa_pairs[:1000])  # Limit to 1000
         print(f"Added {len(healthqa_pairs[:1000])} pairs from HealthQA")
+    
+    print("Attempting to download MedQuAD...")
+    medquad_pairs = download_medquad_dataset()
+    if medquad_pairs:
+        all_pairs.extend(medquad_pairs)
+        print(f"Added {len(medquad_pairs)} pairs from MedQuAD")
     
     # If no datasets downloaded, create a larger synthetic dataset
     if not all_pairs:
