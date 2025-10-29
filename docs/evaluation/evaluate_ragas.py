@@ -38,9 +38,14 @@ load_dotenv()
 PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# Load QA dataset
-with open('docs/evaluation/qa_dataset.json', 'r') as f:
+# Load QA dataset - try expanded version first, fallback to original
+qa_dataset_path = Path(__file__).parent / 'qa_dataset_expanded.json'
+if not qa_dataset_path.exists():
+    qa_dataset_path = Path(__file__).parent / 'qa_dataset.json'
+
+with open(qa_dataset_path, 'r') as f:
     qa_data = json.load(f)
 
 def build_rag_chain_for_eval(retriever):
@@ -81,7 +86,10 @@ def prepare_evaluation_data():
         embedding=embeddings,
         namespace="default"
     )
-    retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+    retriever = docsearch.as_retriever(
+        search_type="mmr",
+        search_kwargs={"k": 8, "fetch_k": 20, "lambda_mult": 0.5}
+    )
 
     rag_chain = build_rag_chain_for_eval(retriever)
 
@@ -90,18 +98,19 @@ def prepare_evaluation_data():
         question = item['question']
         ground_truth = item['ground_truth']
 
-        # Get RAG response
+        # Retrieve contexts explicitly and run the chain for the answer
+        retrieved_docs = retriever.invoke(question)
         response = rag_chain.invoke({"input": question})
 
-        # Extract answer and contexts
+        # Extract answer and contexts (use retriever output to ensure alignment)
         answer = response['answer']
-        contexts = [doc.page_content for doc in response['context']]
+        contexts = [doc.page_content for doc in retrieved_docs]
 
         eval_data.append({
             'question': question,
             'answer': answer,
             'contexts': contexts,
-            'ground_truth': ground_truth
+            'reference': ground_truth
         })
 
     return eval_data

@@ -20,6 +20,10 @@ A Retrieval-Augmented Generation (RAG) medical chatbot built with:
 - Retrieval-based answers (no hallucinations)
 - Restricts responses to **medical-related queries only**
 - Customizable system prompt
+- **Source citations** in responses - shows which documents were used
+- **Multi-format data support** - handles PDF, JSON, and CSV files
+- **MCP (Model Context Protocol) server** for third-party dataset ingestion
+- **Expanded evaluation dataset** with larger QA pairs
 
 
 ## Architecture Overview
@@ -76,6 +80,9 @@ MedicalChatbot/
 │── src/                          # Source code
 │   ├── helper.py                 # Embedding and data loading functions
 │   ├── prompt.py                 # RAG chain and prompt templates
+│   ├── mcp_server.py             # MCP server for dataset ingestion
+│   └── download_qa_dataset.py    # Script to download expanded QA datasets
+│── ingest_dataset.py             # CLI tool for ingesting datasets via MCP
 │── static/                       # Static web assets
 │   ├── style.css                 # CSS styles
 │── templates/                    # HTML templates
@@ -117,6 +124,22 @@ PINECONE_API_KEY=your_pinecone_api_key
 ### 5. Index the data (one-time setup)
 python store_index.py
 
+**Note:** The ingestion pipeline now supports multiple formats:
+- PDF files (existing)
+- JSON files (semi-structured)
+- CSV files (semi-structured)
+
+All files in the `Data/` directory will be automatically indexed.
+
+### 5a. Ingest additional datasets (optional)
+To ingest third-party datasets using the MCP server:
+```bash
+python ingest_dataset.py Data/medical_conditions.json json
+python ingest_dataset.py Data/medical_diseases.csv csv
+```
+
+After ingestion, re-run `python store_index.py` to update the vector index.
+
 ### 6. Run the app
 python app.py
 
@@ -132,8 +155,57 @@ Non-medical questions → bot responds with:
 The chatbot can be evaluated using RAGAS framework with custom QA pairs.
 See `docs/evaluation/` for evaluation scripts and results.
 
+### Expanded QA Dataset
+A larger evaluation dataset is available. To generate it:
+```bash
+python src/download_qa_dataset.py
+```
+
+This will create `docs/evaluation/qa_dataset_expanded.json` with a much larger set of medical QA pairs from various sources (MedQA, PubMedQA, etc.).
+
+## New Features
+
+### Source Citations
+Responses now include source information showing which documents were used:
+- API response includes a `sources` array with filename, type, and path
+- LLM responses include source citations in the format: `[Source: filename.pdf]`
+
+### Multi-Format Data Support
+The system now supports:
+- **PDF files**: Existing support for medical PDFs
+- **JSON files**: Semi-structured medical data (e.g., disease information, QA pairs)
+- **CSV files**: Tabular medical data (e.g., disease symptoms, treatments)
+
+### MCP (Model Context Protocol) Server
+A new MCP server (`src/mcp_server.py`) enables standardized ingestion of third-party datasets:
+- Supports JSON, CSV, and PDF formats
+- Tracks dataset metadata
+- Provides programmatic access to ingested datasets
+
+Usage:
+```bash
+python ingest_dataset.py <file_path> [format_type]
+python ingest_dataset.py --list  # List all ingested datasets
+```
+
+## API Response Format
+
+The `/ask` endpoint now returns:
+```json
+{
+  "answer": "Response text with source citations...",
+  "sources": [
+    {
+      "filename": "medical_conditions.json",
+      "type": "json",
+      "path": "Data/medical_conditions.json"
+    }
+  ]
+}
+```
+
 ## Future Work
 - Implement Agentic RAG (ReAct agent + external APIs)
-- Add conversation memory for multi-turn interactions
-- Integrate additional data sources
-- Enhance evaluation metrics
+- Enhanced conversation memory for multi-turn interactions
+- Additional data source integrations
+- Enhanced evaluation metrics and benchmarking

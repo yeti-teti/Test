@@ -45,13 +45,39 @@
           body: JSON.stringify({ query: msg })
         });
 
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+
         const data = await res.json();
 
         // Show bot reply
-        chatBox.innerHTML += `<div class="message bot">${data.answer}</div>`;
+        if (data.answer) {
+          // Convert markdown-style formatting to HTML
+          let formattedAnswer = data.answer
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+          
+          // Add source citations if available
+          let sourcesHTML = '';
+          if (data.sources && data.sources.length > 0) {
+            sourcesHTML = '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; font-size: 0.85em; color: #666;">';
+            sourcesHTML += '<strong>Sources:</strong> ';
+            const sourceLinks = data.sources.map(s => 
+              `<span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; margin-right: 4px;">${s.filename}</span>`
+            ).join('');
+            sourcesHTML += sourceLinks + '</div>';
+          }
+          
+          chatBox.innerHTML += `<div class="message bot">${formattedAnswer}${sourcesHTML}</div>`;
+        } else {
+          chatBox.innerHTML += `<div class="message bot">No response received</div>`;
+        }
         chatBox.scrollTop = chatBox.scrollHeight;
       } catch (error) {
-        chatBox.innerHTML += `<div class="message bot error">⚠️ Error: Could not reach server</div>`;
+        console.error("Error:", error);
+        chatBox.innerHTML += `<div class="message bot error">⚠️ Error: ${error.message || 'Could not reach server'}<br>Make sure the Flask server is running on port 8080.</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
     });
   </script>

@@ -5,6 +5,7 @@ langchain-community
 langchain-openai
 langchain-pinecone
 langchain-experimental
+langchain-huggingface
 
 # Vector database
 pinecone[grpc]
@@ -26,5 +27,8 @@ python-dotenv
 # Evaluation
 ragas==0.2.10
 datasets==3.2.0
+
+# MCP (Model Context Protocol) support
+mcp
 
 # -e .

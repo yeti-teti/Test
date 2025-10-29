@@ -1,0 +1,18 @@
+[
+  {
+    "name": "medical_conditions",
+    "source_path": "Data/medical_conditions.json",
+    "format": "json",
+    "record_count": 8,
+    "ingestion_date": "2025-10-29T13:36:40.403506",
+    "schema": null
+  },
+  {
+    "name": "medical_diseases",
+    "source_path": "Data/medical_diseases.csv",
+    "format": "csv",
+    "record_count": 5,
+    "ingestion_date": "2025-10-29T13:36:52.365413",
+    "schema": null
+  }
+]
