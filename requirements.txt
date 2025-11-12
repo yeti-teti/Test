@@ -28,7 +28,15 @@ python-dotenv
 ragas==0.2.10
 datasets==3.2.0
 
+# Visualization
+matplotlib
+seaborn
+numpy
+pandas
+
 # MCP (Model Context Protocol) support
 mcp
 
 # -e .
+
+sentence-transformers

@@ -1,5 +1,4 @@
 from flask import Flask, render_template,jsonify,request, session
-from langchain_openai import OpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -8,7 +7,6 @@ from langchain_pinecone import PineconeVectorStore
 from src.helper import download_hugging_face_embeddings
 from src.prompt import *
 from src.mcp_client import get_mcp_client
-from openai import OpenAI
 import os
 import uuid
 import re

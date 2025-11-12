@@ -2,12 +2,12 @@ from setuptools import find_packages,setup
 
 setup(
     name="generative-ai-project",
-    version="0.1.0",
+    version="1.0.0",
     author="Namita Chhantyal",
     author_email="chhantyalnamita.01@gmail.com",
-    description="A Retrieval-Augmented Generation (RAG) based Medical Chatbot using Flask, LangChain, Pinecone, and OpenAI.",
+    description="A Retrieval-Augmented Generation (RAG) based Medical Chatbot with MIMIC-IV dataset integration, MCP support, and comprehensive evaluation using LangChain, Pinecone, and OpenAI.",
     packages=find_packages(),
-    python_requires=">=3.11,<3.12",   
+    python_requires=">=3.11",   
     install_requires=[
         "Flask==3.1.2",
         "python-dotenv==1.1.1",
@@ -23,6 +23,13 @@ setup(
         "sentence-transformers==5.1.1",
         "huggingface-hub==0.35.1",
         "pypdf==5.1.0",
+        "ragas==0.2.10",
+        "datasets==3.2.0",
+        "matplotlib>=3.5.0",
+        "seaborn>=0.12.0",
+        "numpy>=1.23.0",
+        "pandas>=1.5.0",
+        "mcp>=0.1.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.11",

@@ -26,7 +26,7 @@ from ragas.metrics import (
     context_recall,
 )
 from datasets import Dataset
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -50,7 +50,7 @@ with open(qa_dataset_path, 'r') as f:
 
 def build_rag_chain_for_eval(retriever):
     """Build RAG chain for evaluation (modified to return contexts)."""
-    llm = OpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=500)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=500)
 
     system_prompt = """You are a MEDICAL chatbot.
     Use ONLY the provided medical context to answer.
