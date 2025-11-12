@@ -37,6 +37,7 @@ pandas
 # MCP (Model Context Protocol) support
 mcp
 
-# -e .
+# Web Search
+exa-py
 
-sentence-transformers
+# -e .

@@ -103,6 +103,50 @@ class MCPDatasetClient:
                 "success": False,
                 "error": f"Error listing datasets: {str(e)}"
             }
+    
+    def search_mcp_documents(self, query: str, dataset_name: str = None) -> Dict[str, Any]:
+        """
+        Search ingested MCP documents for relevant content.
+        
+        Args:
+            query: Search query string
+            dataset_name: Optional specific dataset to search
+            
+        Returns:
+            Dictionary with search results
+        """
+        try:
+            server = get_mcp_server_instance()
+            results = server.search_documents(query, dataset_name)
+            
+            if not results:
+                return {
+                    "success": True,
+                    "found": False,
+                    "message": f"No results found for '{query}' in MCP datasets"
+                }
+            
+            # Format results
+            formatted_results = []
+            for doc in results:
+                formatted_results.append({
+                    "content": doc.page_content[:500],  # First 500 chars
+                    "source": doc.metadata.get('source', 'unknown'),
+                    "relevance": doc.metadata.get('relevance_score', 0)
+                })
+            
+            return {
+                "success": True,
+                "found": True,
+                "query": query,
+                "results_count": len(formatted_results),
+                "results": formatted_results
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Error searching MCP documents: {str(e)}"
+            }
 
 
 # Global client instance

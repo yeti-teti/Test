@@ -58,9 +58,51 @@
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
           
-          // Add source citations if available
+          // Add source citations with breakdown if available
           let sourcesHTML = '';
-          if (data.sources && data.sources.length > 0) {
+          if (data.source_breakdown) {
+            const breakdown = data.source_breakdown;
+            sourcesHTML = '<div style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #0066cc;">';
+            sourcesHTML += '<strong style="display: block; margin-bottom: 8px; color: #0066cc;">📊 Source Breakdown:</strong>';
+            
+            // Show counts with icons
+            const stats = [];
+            if (breakdown.rag_count > 0) {
+              stats.push(`<span style="display: inline-block; margin-right: 12px;">📚 RAG: <strong>${breakdown.rag_count}</strong></span>`);
+            }
+            if (breakdown.mcp_count > 0) {
+              stats.push(`<span style="display: inline-block; margin-right: 12px;">📊 MCP: <strong>${breakdown.mcp_count}</strong></span>`);
+            }
+            if (breakdown.web_count > 0) {
+              stats.push(`<span style="display: inline-block;">🌐 Web: <strong>${breakdown.web_count}</strong></span>`);
+            }
+            
+            sourcesHTML += stats.join('') + '';
+            
+            // Add details for each source type
+            if (data.sources && data.sources.length > 0) {
+              sourcesHTML += '<div style="margin-top: 8px; font-size: 0.85em; color: #555;">';
+              
+              // Group sources by category
+              const rag = data.sources.filter(s => s.category === 'RAG');
+              const mcp = data.sources.filter(s => s.category === 'MCP');
+              const web = data.sources.filter(s => s.category === 'Web');
+              
+              if (rag.length > 0) {
+                sourcesHTML += '<div style="margin-bottom: 6px;"><strong>📚 RAG Sources:</strong> ' + rag.map(s => `<code>${s.filename}</code>`).join(', ') + '</div>';
+              }
+              if (mcp.length > 0) {
+                sourcesHTML += '<div style="margin-bottom: 6px;"><strong>📊 MCP (Local):</strong> ' + mcp.map(s => `<code>${s.filename}</code>`).join(', ') + '</div>';
+              }
+              if (web.length > 0) {
+                sourcesHTML += '<div><strong>🌐 Web Search:</strong> ' + web.map(s => `<span style="background: #e8f4f8; padding: 2px 6px; border-radius: 3px;">${s.source}</span>`).join(', ') + '</div>';
+              }
+              
+              sourcesHTML += '</div>';
+            }
+            sourcesHTML += '</div>';
+          } else if (data.sources && data.sources.length > 0) {
+            // Fallback if no breakdown data
             sourcesHTML = '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; font-size: 0.85em; color: #666;">';
             sourcesHTML += '<strong>Sources:</strong> ';
             const sourceLinks = data.sources.map(s => 

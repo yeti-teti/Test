@@ -186,6 +186,48 @@ class MedicalDatasetMCPServer:
         """Get all ingested documents."""
         return self.documents
     
+    def search_documents(self, query: str, dataset_name: str = None) -> List[Document]:
+        """
+        Search ingested documents for relevant content.
+        
+        Args:
+            query: Search query (e.g., "hypertension symptoms")
+            dataset_name: Optional specific dataset to search in
+            
+        Returns:
+            List of relevant documents/chunks matching query
+        """
+        if not self.documents:
+            return []
+        
+        # Simple keyword search in documents
+        results = []
+        query_lower = query.lower()
+        query_words = set(query_lower.split())
+        
+        for doc in self.documents:
+            content_lower = doc.page_content.lower()
+            
+            # Check if dataset matches (if specified)
+            if dataset_name:
+                doc_dataset = doc.metadata.get('source', '').lower()
+                if dataset_name.lower() not in doc_dataset:
+                    continue
+            
+            # Count matching words
+            matching_words = sum(1 for word in query_words if word in content_lower)
+            
+            # Include if has matching words
+            if matching_words > 0:
+                # Add relevance score to metadata
+                doc.metadata['relevance_score'] = matching_words / len(query_words)
+                results.append(doc)
+        
+        # Sort by relevance
+        results.sort(key=lambda x: x.metadata.get('relevance_score', 0), reverse=True)
+        
+        return results[:10]  # Return top 10 results
+    
     def clear_documents(self):
         """Clear all ingested documents."""
         self.documents.clear()

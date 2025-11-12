@@ -7,6 +7,7 @@ from langchain_pinecone import PineconeVectorStore
 from src.helper import download_hugging_face_embeddings
 from src.prompt import *
 from src.mcp_client import get_mcp_client
+from src.exa_web_search import search_medical_web
 import os
 import uuid
 import re
@@ -255,7 +256,10 @@ def ask():
         retrieved_docs = retriever.get_relevant_documents(msg)
         
         sources = []
+        rag_sources = []
         seen_sources = set()
+        
+        # Collect RAG/Pinecone sources
         for doc in retrieved_docs:
             source = doc.metadata.get('source', 'unknown')
             source_type = doc.metadata.get('type', 'pdf')
@@ -266,13 +270,82 @@ def ask():
                     sources.append({
                         "filename": filename,
                         "type": source_type,
-                        "path": source
+                        "path": source,
+                        "category": "RAG"
                     })
+                    rag_sources.append(filename)
                     seen_sources.add(filename)
         
+        # Search MCP documents (local datasets) as additional source
+        mcp_client = get_mcp_client()
+        mcp_results = mcp_client.search_mcp_documents(msg)
+        mcp_sources = []
+        
+        if mcp_results.get("found"):
+            # Add MCP sources to the sources list
+            for result in mcp_results.get("results", []):
+                mcp_filename = result.get('source', 'unknown')
+                if mcp_filename not in seen_sources:
+                    sources.append({
+                        "filename": os.path.basename(mcp_filename),
+                        "type": "mcp",
+                        "path": mcp_filename,
+                        "relevance": result.get('relevance', 0),
+                        "category": "MCP"
+                    })
+                    mcp_sources.append(os.path.basename(mcp_filename))
+                    seen_sources.add(mcp_filename)
+        
+        # Search the web using Exa AI for medical information
+        web_results = search_medical_web(msg)
+        web_sources = []
+        
+        if web_results.get("found"):
+            # Add web sources to the sources list
+            for result in web_results.get("results", []):
+                web_url = result.get('url', 'unknown')
+                if web_url not in seen_sources:
+                    sources.append({
+                        "filename": result.get('title', 'Web Result'),
+                        "type": "web",
+                        "url": web_url,
+                        "source": result.get('source', 'unknown'),
+                        "summary": result.get('summary', '')[:200],
+                        "category": "Web"
+                    })
+                    web_sources.append(result.get('source', 'unknown'))
+                    seen_sources.add(web_url)
+        elif web_results.get("medical_query") == False:
+            # If not a medical query, reject it
+            return jsonify({
+                "answer": "Sorry, I can only answer medical-related questions.",
+                "sources": [],
+                "source_breakdown": {}
+            })
+        
+        # Build source attribution footer
+        attribution = []
+        if rag_sources:
+            attribution.append(f"📚 **RAG Sources**: {', '.join(rag_sources[:2])}")
+        if mcp_sources:
+            attribution.append(f"📊 **MCP (Local Data)**: {', '.join(mcp_sources[:2])}")
+        if web_sources:
+            attribution.append(f"🌐 **Web Search**: {', '.join(set(web_sources)[:2])}")
+        
+        # Build final answer with attribution
+        final_answer = response["answer"]
+        if attribution:
+            final_answer += "\n\n---\n**Sources Used**:\n" + "\n".join(attribution)
+        
         return jsonify({
-            "answer": response["answer"],
-            "sources": sources
+            "answer": final_answer,
+            "sources": sources,
+            "source_breakdown": {
+                "rag_count": len(rag_sources),
+                "mcp_count": len(mcp_sources),
+                "web_count": len(web_sources),
+                "total": len(sources)
+            }
         })
     except Exception as e:
         import traceback
