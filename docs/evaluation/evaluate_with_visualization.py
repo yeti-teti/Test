@@ -93,7 +93,7 @@ def build_rag_chain_for_eval(retriever):
     return rag_chain
 
 # Set limit
-def prepare_evaluation_data(limit: int = 50):
+def prepare_evaluation_data(limit: int = 2000):
     """Run RAG on QA pairs and prepare data for RAGAS."""
     # Setup retriever
     embeddings = download_hugging_face_embeddings()
