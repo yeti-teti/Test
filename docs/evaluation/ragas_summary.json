@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-11-12T13:06:40.112424",
+  "total_qa_pairs": 50,
+  "metrics": {
+    "faithfulness": {
+      "mean": 0.9199744993568524,
+      "std": 0.18678811802605416,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "answer_relevancy": {
+      "mean": 0.7587099157476892,
+      "std": 0.3839280720586018,
+      "min": 0.0,
+      "max": 0.9877558552206147
+    },
+    "context_precision": {
+      "mean": 0.8595214956592064,
+      "std": 0.2474211144224118,
+      "min": 0.14285714284285714,
+      "max": 0.9999999999875
+    },
+    "context_recall": {
+      "mean": 0.8320254730649467,
+      "std": 0.24119666069035467,
+      "min": 0.07692307692307693,
+      "max": 1.0
+    }
+  },
+  "pre_integration": {
+    "faithfulness": 0.6098484848484848,
+    "answer_relevancy": 0.720697878333581,
+    "context_precision": 0.2862533875176795,
+    "context_recall": 0.316260162601626
+  },
+  "improvements": {
+    "faithfulness": 0.31012601450836763,
+    "answer_relevancy": 0.03801203741410819,
+    "context_precision": 0.573268108141527,
+    "context_recall": 0.5157653104633206
+  }
+}
