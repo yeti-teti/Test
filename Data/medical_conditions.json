@@ -1,0 +1,58 @@
+[
+  {
+    "disease": "Hypertension",
+    "symptoms": ["High blood pressure", "Headaches", "Shortness of breath", "Chest pain"],
+    "treatment": "Lifestyle modifications (diet, exercise) and medications like ACE inhibitors, ARBs, beta-blockers",
+    "prevalence": "Affects approximately 1 in 3 adults worldwide",
+    "risk_factors": ["Age", "Family history", "Obesity", "Sedentary lifestyle", "High salt intake"]
+  },
+  {
+    "disease": "Diabetes Type 2",
+    "symptoms": ["Frequent urination", "Excessive thirst", "Increased hunger", "Fatigue", "Blurred vision"],
+    "treatment": "Metformin, lifestyle changes, insulin therapy if needed",
+    "prevalence": "Affects over 400 million people globally",
+    "risk_factors": ["Obesity", "Family history", "Age over 45", "Sedentary lifestyle", "High blood pressure"]
+  },
+  {
+    "disease": "Asthma",
+    "symptoms": ["Wheezing", "Shortness of breath", "Chest tightness", "Coughing"],
+    "treatment": "Inhalers (bronchodilators, corticosteroids), avoiding triggers",
+    "prevalence": "Affects approximately 300 million people worldwide",
+    "risk_factors": ["Allergies", "Family history", "Environmental factors", "Respiratory infections"]
+  },
+  {
+    "disease": "Chronic Obstructive Pulmonary Disease (COPD)",
+    "symptoms": ["Shortness of breath", "Chronic cough", "Wheezing", "Chest tightness"],
+    "treatment": "Bronchodilators, inhaled corticosteroids, oxygen therapy, pulmonary rehabilitation",
+    "prevalence": "Affects approximately 64 million people globally",
+    "risk_factors": ["Smoking", "Exposure to air pollution", "Age", "Genetic factors"]
+  },
+  {
+    "disease": "Coronary Artery Disease",
+    "symptoms": ["Chest pain (angina)", "Shortness of breath", "Fatigue", "Heart palpitations"],
+    "treatment": "Lifestyle changes, medications (statins, aspirin), angioplasty, bypass surgery",
+    "prevalence": "Leading cause of death worldwide",
+    "risk_factors": ["High cholesterol", "High blood pressure", "Smoking", "Diabetes", "Obesity"]
+  },
+  {
+    "disease": "Osteoarthritis",
+    "symptoms": ["Joint pain", "Stiffness", "Swelling", "Loss of flexibility"],
+    "treatment": "NSAIDs, physical therapy, weight loss, joint injections, surgery in severe cases",
+    "prevalence": "Affects over 300 million people globally",
+    "risk_factors": ["Age", "Obesity", "Joint injuries", "Genetics", "Repetitive stress"]
+  },
+  {
+    "disease": "Depression",
+    "symptoms": ["Persistent sadness", "Loss of interest", "Fatigue", "Sleep disturbances", "Feelings of worthlessness"],
+    "treatment": "Antidepressants, psychotherapy (CBT), lifestyle changes, support groups",
+    "prevalence": "Affects over 264 million people worldwide",
+    "risk_factors": ["Family history", "Trauma", "Chronic illness", "Substance abuse", "Stress"]
+  },
+  {
+    "disease": "Migraine",
+    "symptoms": ["Severe headache", "Nausea", "Sensitivity to light and sound", "Visual disturbances"],
+    "treatment": "Pain relievers, triptans, preventive medications, lifestyle modifications",
+    "prevalence": "Affects approximately 1 billion people globally",
+    "risk_factors": ["Family history", "Hormonal changes", "Stress", "Certain foods", "Sleep patterns"]
+  }
+]

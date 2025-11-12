@@ -1,0 +1,6 @@
+disease,symptoms,treatment,prevalence,risk_factors
+Hypertension,"High blood pressure, Headaches, Shortness of breath","Lifestyle modifications and medications like ACE inhibitors","Affects approximately 1 in 3 adults worldwide","Age, Family history, Obesity, Sedentary lifestyle"
+Diabetes Type 2,"Frequent urination, Excessive thirst, Increased hunger, Fatigue","Metformin, lifestyle changes, insulin therapy","Affects over 400 million people globally","Obesity, Family history, Age over 45"
+Asthma,"Wheezing, Shortness of breath, Chest tightness","Inhalers (bronchodilators, corticosteroids)","Affects approximately 300 million people worldwide","Allergies, Family history, Environmental factors"
+COPD,"Shortness of breath, Chronic cough, Wheezing","Bronchodilators, inhaled corticosteroids, oxygen therapy","Affects approximately 64 million people globally","Smoking, Exposure to air pollution, Age"
+Coronary Artery Disease,"Chest pain (angina), Shortness of breath, Fatigue","Lifestyle changes, medications, angioplasty, bypass surgery","Leading cause of death worldwide","High cholesterol, High blood pressure, Smoking"

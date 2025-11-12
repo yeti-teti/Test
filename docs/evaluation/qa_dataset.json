@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What are the common symptoms of diabetes mellitus?",
+    "ground_truth": "Common symptoms of diabetes mellitus include frequent urination, excessive thirst, increased hunger, unexplained weight loss, fatigue, slow-healing sores, frequent infections, blurred vision, and tingling or numbness in hands or feet."
+  },
+  {
+    "question": "How is hypertension typically treated?",
+    "ground_truth": "Hypertension is typically treated through lifestyle modifications including diet changes (DASH diet), regular exercise, weight loss, and limiting alcohol and salt intake. Medications such as ACE inhibitors, ARBs, beta-blockers, diuretics, or calcium channel blockers may be prescribed depending on the severity and patient factors."
+  },
+  {
+    "question": "What are the main risk factors for coronary heart disease?",
+    "ground_truth": "Main risk factors for coronary heart disease include high blood pressure, high cholesterol, smoking, diabetes, obesity, physical inactivity, unhealthy diet, excessive alcohol consumption, stress, and family history of heart disease."
+  },
+  {
+    "question": "How does aspirin work to prevent blood clots?",
+    "ground_truth": "Aspirin works by inhibiting cyclooxygenase (COX) enzymes, which reduces the production of thromboxane A2. Thromboxane A2 promotes platelet aggregation and vasoconstriction. By blocking its synthesis, aspirin prevents platelets from clumping together and forming blood clots."
+  },
+  {
+    "question": "What are the typical treatments for community-acquired pneumonia?",
+    "ground_truth": "Community-acquired pneumonia is typically treated with antibiotics such as amoxicillin, azithromycin, or levofloxacin, depending on the suspected pathogen and patient allergies. Supportive care includes rest, hydration, fever reducers, and oxygen therapy if needed. Hospitalization may be required for severe cases."
+  },
+  {
+    "question": "What causes migraine headaches?",
+    "ground_truth": "The exact cause of migraines is unknown, but they are believed to involve a combination of genetic and environmental factors. Triggers can include stress, certain foods, hormonal changes, lack of sleep, bright lights, and weather changes. The condition involves abnormal brain activity affecting nerve signals, chemicals, and blood vessels."
+  },
+  {
+    "question": "How is asthma diagnosed?",
+    "ground_truth": "Asthma is diagnosed through a combination of medical history, physical examination, and lung function tests. Spirometry measures how much air you can exhale and how quickly. Peak flow monitoring tracks breathing patterns. Allergy testing may identify triggers. Bronchoprovocation tests can confirm airway hyperresponsiveness."
+  },
+  {
+    "question": "What are the stages of chronic kidney disease?",
+    "ground_truth": "Chronic kidney disease has five stages based on glomerular filtration rate (GFR): Stage 1 (GFR ≥90, kidney damage with normal function), Stage 2 (GFR 60-89, mild damage), Stage 3 (GFR 30-59, moderate damage), Stage 4 (GFR 15-29, severe damage), Stage 5 (GFR <15, kidney failure requiring dialysis or transplant)."
+  },
+  {
+    "question": "How does vaccination work against infectious diseases?",
+    "ground_truth": "Vaccines work by stimulating the immune system to recognize and fight specific pathogens without causing disease. They contain weakened, inactivated, or parts of the pathogen, or genetic material that instructs cells to produce harmless pathogen components. This 'teaches' the immune system to produce antibodies and memory cells for future protection."
+  },
+  {
+    "question": "What are the symptoms of depression?",
+    "ground_truth": "Symptoms of depression include persistent sadness, loss of interest in activities, changes in appetite or weight, sleep disturbances, fatigue, feelings of worthlessness, difficulty concentrating, irritability, and thoughts of death or suicide. Symptoms must persist for at least two weeks for a diagnosis."
+  },
+  {
+    "question": "How is type 2 diabetes managed?",
+    "ground_truth": "Type 2 diabetes management includes lifestyle changes (healthy diet, regular exercise, weight loss), oral medications (metformin, sulfonylureas, DPP-4 inhibitors), injectable medications (GLP-1 agonists, insulin), blood glucose monitoring, and regular medical check-ups to prevent complications."
+  },
+  {
+    "question": "What causes peptic ulcers?",
+    "ground_truth": "Peptic ulcers are primarily caused by Helicobacter pylori (H. pylori) bacterial infection or long-term use of nonsteroidal anti-inflammatory drugs (NSAIDs). Other factors include smoking, excessive alcohol consumption, stress, and certain medications. H. pylori damages the protective mucus layer, allowing stomach acid to erode the lining."
+  },
+  {
+    "question": "How is influenza diagnosed and treated?",
+    "ground_truth": "Influenza is diagnosed through symptoms, rapid antigen tests, PCR tests, or viral culture. Treatment focuses on symptom relief with rest, fluids, and over-the-counter medications. Antiviral medications like oseltamivir (Tamiflu) can shorten duration if taken early. Annual vaccination is the best prevention."
+  },
+  {
+    "question": "What are the complications of untreated high blood pressure?",
+    "ground_truth": "Untreated high blood pressure can lead to heart attack, stroke, heart failure, kidney damage, vision loss, peripheral artery disease, aortic aneurysms, and cognitive decline. It damages blood vessel walls, increasing atherosclerosis risk."
+  },
+  {
+    "question": "How does chemotherapy work in cancer treatment?",
+    "ground_truth": "Chemotherapy uses drugs to kill rapidly dividing cancer cells. Since cancer cells divide faster than normal cells, they are more susceptible. However, it can also damage healthy cells causing side effects. Different drugs target various cell division phases. Combination therapies improve effectiveness and reduce resistance."
+  }
+]

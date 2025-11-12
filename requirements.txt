@@ -1,0 +1,42 @@
+# LangChain core
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-pinecone
+langchain-experimental
+langchain-huggingface
+
+# Vector database
+pinecone[grpc]
+pinecone-client 
+
+# Embeddings
+sentence-transformers
+huggingface-hub
+
+# Document loading + splitting
+pypdf
+
+# OpenAI API
+openai
+
+Flask
+python-dotenv
+
+# Evaluation
+ragas==0.2.10
+datasets==3.2.0
+
+# Visualization
+matplotlib
+seaborn
+numpy
+pandas
+
+# MCP (Model Context Protocol) support
+mcp
+
+# -e .
+
+sentence-transformers
