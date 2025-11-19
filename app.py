@@ -7,7 +7,7 @@ from langchain_pinecone import PineconeVectorStore
 from src.helper import download_hugging_face_embeddings
 from src.prompt import *
 from src.mcp_client import get_mcp_client
-from src.exa_web_search import search_medical_web
+from src.exa_web_search import search_medical_web, get_medical_searcher
 import os
 import uuid
 import re
@@ -249,17 +249,50 @@ def ask():
                 "sources": []
             })
 
+    # Early medical query check - reject non-medical queries before RAG retrieval
+    medical_searcher = get_medical_searcher()
+    msg_lower = msg.lower()
+    
+    # Check for clearly non-medical geographic/location queries
+    location_patterns = [
+        r"where\s+(is|are)\s+",
+        r"what\s+(is|are)\s+the\s+(capital|location)\s+of",
+        r"where\s+(is|are)\s+(new\s+york|paris|london|france|england|america|usa)",
+    ]
+    location_keywords = ["new york city", "newyork", "capital of", "location of", 
+                        "where is", "geography", "geographic"]
+    
+    # If it's a location query, reject immediately
+    if any(re.search(pattern, msg_lower) for pattern in location_patterns) or \
+       any(keyword in msg_lower for keyword in location_keywords):
+        return jsonify({
+            "answer": "Sorry, I can only answer medical-related questions. Please ask about diseases, symptoms, treatments, medications, health conditions, or other medical topics.",
+            "sources": [],
+            "source_breakdown": {}
+        })
+    
+    # Use the medical query checker for other cases
+    if not medical_searcher.is_medical_query(msg):
+        # Additional non-medical keywords that should be rejected
+        non_medical_keywords = ["recipe", "cook", "how to make", "programming", 
+                               "python code", "sport", "game", "movie", "weather"]
+        if any(keyword in msg_lower for keyword in non_medical_keywords):
+            return jsonify({
+                "answer": "Sorry, I can only answer medical-related questions. Please ask about diseases, symptoms, treatments, medications, health conditions, or other medical topics.",
+                "sources": [],
+                "source_breakdown": {}
+            })
+
     try:
-        rag_chain = get_or_create_chain(session_id)
-        response = rag_chain({"question": msg})
-        
+        # Get RAG documents from Pinecone
         retrieved_docs = retriever.get_relevant_documents(msg)
         
         sources = []
         rag_sources = []
         seen_sources = set()
         
-        # Collect RAG/Pinecone sources
+        # Collect RAG/Pinecone sources and content
+        rag_context = []
         for doc in retrieved_docs:
             source = doc.metadata.get('source', 'unknown')
             source_type = doc.metadata.get('type', 'pdf')
@@ -275,14 +308,15 @@ def ask():
                     })
                     rag_sources.append(filename)
                     seen_sources.add(filename)
+                    rag_context.append(f"[From {filename}]: {doc.page_content}")
         
         # Search MCP documents (local datasets) as additional source
         mcp_client = get_mcp_client()
         mcp_results = mcp_client.search_mcp_documents(msg)
         mcp_sources = []
+        mcp_context = []
         
         if mcp_results.get("found"):
-            # Add MCP sources to the sources list
             for result in mcp_results.get("results", []):
                 mcp_filename = result.get('source', 'unknown')
                 if mcp_filename not in seen_sources:
@@ -295,45 +329,116 @@ def ask():
                     })
                     mcp_sources.append(os.path.basename(mcp_filename))
                     seen_sources.add(mcp_filename)
+                    content = result.get('content', '')
+                    if content:
+                        mcp_context.append(f"[From {os.path.basename(mcp_filename)}]: {content}")
         
-        # Search the web using Exa AI for medical information
-        web_results = search_medical_web(msg)
+        # Search the web using Exa AI for medical information WITH CONTENT
+        medical_searcher = get_medical_searcher()
+        print(f"🔍 DEBUG: Searching Exa AI for: {msg}")
+        web_results = medical_searcher.search_with_content(msg, num_results=5)
+        print(f"🔍 DEBUG: Exa results: {web_results}")
         web_sources = []
+        web_context = []
         
         if web_results.get("found"):
-            # Add web sources to the sources list
+            print(f"✅ DEBUG: Found {len(web_results.get('results', []))} web results")
             for result in web_results.get("results", []):
                 web_url = result.get('url', 'unknown')
                 if web_url not in seen_sources:
+                    title = result.get('title', 'Web Result')
+                    domain = result.get('source', 'unknown')
+                    content = result.get('content', '')
+                    
+                    print(f"📄 DEBUG: Web result - {title} from {domain}, content length: {len(content)}")
+                    
                     sources.append({
-                        "filename": result.get('title', 'Web Result'),
+                        "filename": title,
                         "type": "web",
                         "url": web_url,
-                        "source": result.get('source', 'unknown'),
-                        "summary": result.get('summary', '')[:200],
+                        "source": domain,
+                        "summary": content[:200] if content else '',
                         "category": "Web"
                     })
-                    web_sources.append(result.get('source', 'unknown'))
+                    web_sources.append(domain)
                     seen_sources.add(web_url)
-        elif web_results.get("medical_query") == False:
-            # If not a medical query, reject it
+                    
+                    # Add web content to context for LLM
+                    if content:
+                        web_context.append(f"[From {domain} - {title}]: {content}")
+        else:
+            print(f"❌ DEBUG: No web results found. Response: {web_results}")
+        
+        if web_results.get("medical_query") == False:
+            # Only reject if it's clearly not medical AND we have no RAG/MCP sources
+            if not rag_sources and not mcp_sources:
+                return jsonify({
+                    "answer": "Sorry, I can only answer medical-related questions.",
+                    "sources": [],
+                    "source_breakdown": {}
+                })
+        
+        # Combine all context sources
+        all_context = rag_context + mcp_context + web_context
+        
+        if not all_context:
+            # No context found anywhere
             return jsonify({
-                "answer": "Sorry, I can only answer medical-related questions.",
+                "answer": "I couldn't find relevant information to answer your question. Please try rephrasing or ask a different medical question.",
                 "sources": [],
-                "source_breakdown": {}
+                "source_breakdown": {
+                    "rag_count": 0,
+                    "mcp_count": 0,
+                    "web_count": 0,
+                    "total": 0
+                }
             })
+        
+        # Build enhanced prompt with all context
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=1500)
+        
+        enhanced_prompt = f"""You are a knowledgeable medical assistant. Answer the following medical question using the provided context from multiple sources.
+
+CONTEXT FROM MULTIPLE SOURCES:
+{chr(10).join(all_context)}
+
+QUESTION: {msg}
+
+INSTRUCTIONS:
+1. Provide a comprehensive answer based on the context above
+2. Synthesize information from all available sources
+3. Be specific and detailed
+4. If sources conflict, mention the different perspectives
+5. Do NOT make up information - only use what's in the context
+6. Keep your answer clear and well-organized
+
+ANSWER:"""
+        
+        # Generate answer using LLM with all context
+        response = llm.invoke(enhanced_prompt)
+        answer_text = response.content
         
         # Build source attribution footer
         attribution = []
         if rag_sources:
-            attribution.append(f"📚 **RAG Sources**: {', '.join(rag_sources[:2])}")
+            attribution.append(f"📚 **RAG Sources**: {', '.join(rag_sources[:3])}")
         if mcp_sources:
-            attribution.append(f"📊 **MCP (Local Data)**: {', '.join(mcp_sources[:2])}")
+            attribution.append(f"📊 **MCP (Local Data)**: {', '.join(mcp_sources[:3])}")
         if web_sources:
-            attribution.append(f"🌐 **Web Search**: {', '.join(set(web_sources)[:2])}")
+            # Get unique web source titles for attribution
+            web_titles = []
+            for source in sources:
+                if source.get('category') == 'Web' and source.get('filename'):
+                    if source['filename'] not in web_titles:
+                        web_titles.append(source['filename'])
+            if web_titles:
+                attribution.append(f"🌐 **Web Search (Exa AI)**: {', '.join(web_titles[:3])}")
+            else:
+                attribution.append(f"🌐 **Web Search (Exa AI)**: {', '.join(set(web_sources)[:3])}")
         
         # Build final answer with attribution
-        final_answer = response["answer"]
+        final_answer = answer_text
         if attribution:
             final_answer += "\n\n---\n**Sources Used**:\n" + "\n".join(attribution)
         

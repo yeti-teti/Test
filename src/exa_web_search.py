@@ -37,6 +37,7 @@ class MedicalWebSearcher:
             True if medical query, False otherwise
         """
         medical_keywords = [
+            # General medical terms
             "disease", "symptom", "treatment", "medication", "drug",
             "condition", "illness", "health", "medical", "diagnosis",
             "doctor", "hospital", "surgery", "pain", "fever",
@@ -45,13 +46,52 @@ class MedicalWebSearcher:
             "patient", "clinical", "healthcare", "disorder", "syndrome",
             "hypertension", "asthma", "arthritis", "depression",
             "anxiety", "nutrition", "vitamin", "supplement", "exercise",
-            "wellness", "disease", "epidemic", "pandemic", "vaccine"
+            "wellness", "epidemic", "pandemic",
+            # Common symptoms and conditions
+            "diarrhea", "diarrhoea", "nausea", "vomiting", "headache",
+            "cough", "sneeze", "rash", "itch", "swelling", "bleeding",
+            "dizziness", "fatigue", "weakness", "numbness", "tingling",
+            "shortness of breath", "chest pain", "abdominal pain",
+            "stomach ache", "back pain", "joint pain", "muscle pain",
+            # Common diseases and conditions
+            "flu", "cold", "allergy", "asthma", "bronchitis",
+            "pneumonia", "tuberculosis", "malaria", "dengue",
+            "hepatitis", "kidney", "liver", "lung", "brain",
+            "stroke", "heart attack", "hypertension", "diabetes",
+            "obesity", "anemia", "osteoporosis", "migraine",
+            "epilepsy", "parkinson", "alzheimer", "dementia",
+            # Body parts and systems
+            "blood", "bone", "muscle", "nerve", "skin", "eye",
+            "ear", "nose", "throat", "teeth", "gum", "tongue",
+            "stomach", "intestine", "colon", "bladder", "kidney",
+            "liver", "pancreas", "thyroid", "adrenal", "pituitary",
+            # Medical procedures and tests
+            "x-ray", "mri", "ct scan", "ultrasound", "biopsy",
+            "surgery", "operation", "procedure", "test", "scan",
+            # Medications and treatments
+            "antibiotic", "antiviral", "antifungal", "antidepressant",
+            "painkiller", "analgesic", "anti-inflammatory", "steroid",
+            "chemotherapy", "radiation", "physiotherapy", "rehabilitation"
         ]
         
         query_lower = query.lower()
         
         # Check if any medical keyword is in the query
-        return any(keyword in query_lower for keyword in medical_keywords)
+        if any(keyword in query_lower for keyword in medical_keywords):
+            return True
+        
+        # Also check for "what is" queries - these are often medical questions
+        # when asking about a specific term
+        if re.search(r'what\s+is\s+(\w+)', query_lower):
+            # If it's asking "what is X", be more permissive
+            # Assume it's medical unless it's clearly not
+            non_medical_words = ["weather", "time", "date", "color", "food",
+                                "restaurant", "movie", "song", "book", "game",
+                                "sport", "team", "player", "city", "country"]
+            if not any(word in query_lower for word in non_medical_words):
+                return True
+        
+        return False
     
     def search_medical_web(self, query: str, num_results: int = 5) -> Dict[str, Any]:
         """
@@ -80,36 +120,12 @@ class MedicalWebSearcher:
         
         try:
             # Search the web for medical information
-            # Focus on authoritative medical sources
-            search_query = f"{query} medical health"
+            search_query = f"{query} medical health information"
             
             results = self.exa.search(
                 query=search_query,
                 num_results=num_results,
                 type="neural",  # Use neural search for better semantic understanding
-                use_autoprompt=True,  # Auto-enhance query for better results
-                include_domains=[
-                    "mayo clinic",
-                    "webmd.com",
-                    "medlineplus.gov",
-                    "healthline.com",
-                    "nih.gov",
-                    "cdc.gov",
-                    "who.int",
-                    "nhs.uk",
-                    "medical.com",
-                    "healthpoint.co.nz",
-                    "pmc",
-                    "pubmed",
-                    "ncbi.nlm.nih.gov"
-                ],
-                exclude_domains=[
-                    "facebook.com",
-                    "twitter.com",
-                    "instagram.com",
-                    "tiktok.com",
-                    "youtube.com"
-                ]
             )
             
             if not results or not results.results:
@@ -181,31 +197,41 @@ class MedicalWebSearcher:
             }
         
         try:
-            # Search with live crawling for latest content
+            # Search with content for medical information
             search_query = f"{query} medical health information"
             
+            print(f"🔍 Exa: Searching for '{search_query}' with {num_results} results")
+            
+            # Use search_and_contents to get both results and content
             results = self.exa.search_and_contents(
                 query=search_query,
                 num_results=num_results,
                 type="neural",
-                use_autoprompt=True,
-                livecrawl="always",  # Get fresh content
+                text={"max_characters": 2000},  # Get more content
             )
             
+            print(f"🔍 Exa: Got response, checking results...")
+            
             if not results or not results.results:
+                print(f"❌ Exa: No results found")
                 return {
                     "success": True,
                     "found": False,
                     "message": "No results found"
                 }
             
+            print(f"✅ Exa: Found {len(results.results)} results")
+            
             formatted_results = []
             for idx, result in enumerate(results.results, 1):
+                content = result.text if hasattr(result, 'text') and result.text else ""
+                print(f"📄 Exa Result {idx}: {result.title} - content length: {len(content)}")
+                
                 formatted_results.append({
                     "rank": idx,
                     "title": result.title,
                     "url": result.url,
-                    "content": result.text[:500],  # First 500 chars of actual content
+                    "content": content[:1500] if content else "",  # More content for better answers
                     "source": self._extract_domain(result.url)
                 })
             
@@ -218,6 +244,9 @@ class MedicalWebSearcher:
             }
             
         except Exception as e:
+            print(f"❌ Exa Error: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {
                 "success": False,
                 "error": f"Error: {str(e)}"

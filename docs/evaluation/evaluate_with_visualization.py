@@ -66,7 +66,7 @@ with open(qa_dataset_path, 'r') as f:
 
 def build_rag_chain_for_eval(retriever):
     """Build RAG chain for evaluation (modified to return contexts)."""
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=500)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=1000)
 
     system_prompt = """You are a MEDICAL chatbot.
     Use ONLY the provided medical context to answer.
@@ -93,7 +93,7 @@ def build_rag_chain_for_eval(retriever):
     return rag_chain
 
 # Set limit
-def prepare_evaluation_data(limit: int = 2000):
+def prepare_evaluation_data(limit: int = 1000):
     """Run RAG on QA pairs and prepare data for RAGAS."""
     # Setup retriever
     embeddings = download_hugging_face_embeddings()

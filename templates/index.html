@@ -27,13 +27,29 @@
     const chatBox = document.getElementById("chat-box");
     const userInput = document.getElementById("user-input");
 
+    // Helper function to escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const msg = userInput.value.trim();
       if (!msg) return;
 
-      // Show user message
-      chatBox.innerHTML += `<div class="message user">${msg}</div>`;
+      // Show user message with clearfix
+      const userMsgDiv = document.createElement('div');
+      userMsgDiv.className = 'message user';
+      userMsgDiv.textContent = msg;
+      chatBox.appendChild(userMsgDiv);
+      
+      // Add clearfix div
+      const clearDiv = document.createElement('div');
+      clearDiv.style.clear = 'both';
+      chatBox.appendChild(clearDiv);
+      
       userInput.value = "";
       chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -62,26 +78,26 @@
           let sourcesHTML = '';
           if (data.source_breakdown) {
             const breakdown = data.source_breakdown;
-            sourcesHTML = '<div style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #0066cc;">';
-            sourcesHTML += '<strong style="display: block; margin-bottom: 8px; color: #0066cc;">📊 Source Breakdown:</strong>';
+            sourcesHTML = '<div style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 100%); border-radius: 12px; border-left: 4px solid #0078ff; box-shadow: 0 2px 8px rgba(0, 120, 255, 0.1);">';
+            sourcesHTML += '<div style="display: flex; align-items: center; margin-bottom: 12px;"><strong style="color: #0078ff; font-size: 16px;">📊 Source Breakdown</strong></div>';
             
-            // Show counts with icons
+            // Show counts with icons in a more visual way
             const stats = [];
             if (breakdown.rag_count > 0) {
-              stats.push(`<span style="display: inline-block; margin-right: 12px;">📚 RAG: <strong>${breakdown.rag_count}</strong></span>`);
+              stats.push(`<div style="display: inline-flex; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; margin-right: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><span style="font-size: 20px; margin-right: 6px;">📚</span><span style="color: #666; font-size: 13px; margin-right: 4px;">RAG:</span><strong style="color: #0078ff; font-size: 16px;">${breakdown.rag_count}</strong></div>`);
             }
             if (breakdown.mcp_count > 0) {
-              stats.push(`<span style="display: inline-block; margin-right: 12px;">📊 MCP: <strong>${breakdown.mcp_count}</strong></span>`);
+              stats.push(`<div style="display: inline-flex; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; margin-right: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><span style="font-size: 20px; margin-right: 6px;">📊</span><span style="color: #666; font-size: 13px; margin-right: 4px;">MCP:</span><strong style="color: #0078ff; font-size: 16px;">${breakdown.mcp_count}</strong></div>`);
             }
             if (breakdown.web_count > 0) {
-              stats.push(`<span style="display: inline-block;">🌐 Web: <strong>${breakdown.web_count}</strong></span>`);
+              stats.push(`<div style="display: inline-flex; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><span style="font-size: 20px; margin-right: 6px;">🌐</span><span style="color: #666; font-size: 13px; margin-right: 4px;">Web:</span><strong style="color: #0078ff; font-size: 16px;">${breakdown.web_count}</strong></div>`);
             }
             
-            sourcesHTML += stats.join('') + '';
+            sourcesHTML += '<div style="margin-bottom: 12px;">' + stats.join('') + '</div>';
             
             // Add details for each source type
             if (data.sources && data.sources.length > 0) {
-              sourcesHTML += '<div style="margin-top: 8px; font-size: 0.85em; color: #555;">';
+              sourcesHTML += '<div style="margin-top: 12px; font-size: 14px; color: #444;">';
               
               // Group sources by category
               const rag = data.sources.filter(s => s.category === 'RAG');
@@ -89,13 +105,22 @@
               const web = data.sources.filter(s => s.category === 'Web');
               
               if (rag.length > 0) {
-                sourcesHTML += '<div style="margin-bottom: 6px;"><strong>📚 RAG Sources:</strong> ' + rag.map(s => `<code>${s.filename}</code>`).join(', ') + '</div>';
+                sourcesHTML += '<div style="margin-bottom: 10px; padding: 8px; background: #fff; border-radius: 6px;"><strong style="color: #0078ff;">📚 RAG Sources:</strong><div style="margin-top: 4px;">' + rag.map(s => `<code style="background: #f0f0f0; padding: 3px 8px; border-radius: 4px; margin-right: 6px; margin-top: 4px; display: inline-block; font-size: 12px;">${escapeHtml(s.filename)}</code>`).join('') + '</div></div>';
               }
               if (mcp.length > 0) {
-                sourcesHTML += '<div style="margin-bottom: 6px;"><strong>📊 MCP (Local):</strong> ' + mcp.map(s => `<code>${s.filename}</code>`).join(', ') + '</div>';
+                sourcesHTML += '<div style="margin-bottom: 10px; padding: 8px; background: #fff; border-radius: 6px;"><strong style="color: #0078ff;">📊 MCP (Local Data):</strong><div style="margin-top: 4px;">' + mcp.map(s => `<code style="background: #f0f0f0; padding: 3px 8px; border-radius: 4px; margin-right: 6px; margin-top: 4px; display: inline-block; font-size: 12px;">${escapeHtml(s.filename)}</code>`).join('') + '</div></div>';
               }
               if (web.length > 0) {
-                sourcesHTML += '<div><strong>🌐 Web Search:</strong> ' + web.map(s => `<span style="background: #e8f4f8; padding: 2px 6px; border-radius: 3px;">${s.source}</span>`).join(', ') + '</div>';
+                sourcesHTML += '<div style="padding: 8px; background: #fff; border-radius: 6px;"><strong style="color: #0078ff;">🌐 Web Search (Exa AI):</strong>';
+                sourcesHTML += '<div style="margin-top: 8px;">';
+                sourcesHTML += web.map(s => {
+                  const title = s.filename || s.title || 'Web Result';
+                  const url = s.url || '#';
+                  const domain = s.source || 'unknown';
+                  const summary = s.summary ? ` title="${escapeHtml(s.summary)}"` : '';
+                  return `<div style="margin-bottom: 6px;"><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #e8f4f8 0%, #d4ebf7 100%); padding: 8px 12px; border-radius: 6px; text-decoration: none; color: #0066cc; font-weight: 500; display: inline-block; transition: transform 0.2s ease; border: 1px solid #b3d9f2;"${summary} onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">${escapeHtml(title)}</a> <span style="color: #888; font-size: 12px; margin-left: 6px;">(${escapeHtml(domain)})</span></div>`;
+                }).join('');
+                sourcesHTML += '</div></div>';
               }
               
               sourcesHTML += '</div>';
@@ -103,22 +128,45 @@
             sourcesHTML += '</div>';
           } else if (data.sources && data.sources.length > 0) {
             // Fallback if no breakdown data
-            sourcesHTML = '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; font-size: 0.85em; color: #666;">';
-            sourcesHTML += '<strong>Sources:</strong> ';
+            sourcesHTML = '<div style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-top: 2px solid #e0e0e0; font-size: 14px; color: #555;">';
+            sourcesHTML += '<strong style="color: #0078ff;">📚 Sources:</strong><div style="margin-top: 6px;">';
             const sourceLinks = data.sources.map(s => 
-              `<span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; margin-right: 4px;">${s.filename}</span>`
+              `<code style="background: #fff; padding: 4px 8px; border-radius: 4px; margin-right: 6px; margin-top: 4px; display: inline-block; border: 1px solid #e0e0e0; font-size: 12px;">${escapeHtml(s.filename)}</code>`
             ).join('');
-            sourcesHTML += sourceLinks + '</div>';
+            sourcesHTML += sourceLinks + '</div></div>';
           }
           
-          chatBox.innerHTML += `<div class="message bot">${formattedAnswer}${sourcesHTML}</div>`;
+          const botMsgDiv = document.createElement('div');
+          botMsgDiv.className = 'message bot';
+          botMsgDiv.innerHTML = formattedAnswer + sourcesHTML;
+          chatBox.appendChild(botMsgDiv);
+          
+          // Add clearfix div
+          const clearDiv2 = document.createElement('div');
+          clearDiv2.style.clear = 'both';
+          chatBox.appendChild(clearDiv2);
         } else {
-          chatBox.innerHTML += `<div class="message bot">No response received</div>`;
+          const botMsgDiv = document.createElement('div');
+          botMsgDiv.className = 'message bot';
+          botMsgDiv.textContent = 'No response received';
+          chatBox.appendChild(botMsgDiv);
+          
+          const clearDiv2 = document.createElement('div');
+          clearDiv2.style.clear = 'both';
+          chatBox.appendChild(clearDiv2);
         }
         chatBox.scrollTop = chatBox.scrollHeight;
       } catch (error) {
         console.error("Error:", error);
-        chatBox.innerHTML += `<div class="message bot error">⚠️ Error: ${error.message || 'Could not reach server'}<br>Make sure the Flask server is running on port 8080.</div>`;
+        const errorMsgDiv = document.createElement('div');
+        errorMsgDiv.className = 'message bot error';
+        errorMsgDiv.innerHTML = `⚠️ Error: ${escapeHtml(error.message || 'Could not reach server')}<br>Make sure the Flask server is running on port 8080.`;
+        chatBox.appendChild(errorMsgDiv);
+        
+        const clearDiv3 = document.createElement('div');
+        clearDiv3.style.clear = 'both';
+        chatBox.appendChild(clearDiv3);
+        
         chatBox.scrollTop = chatBox.scrollHeight;
       }
     });

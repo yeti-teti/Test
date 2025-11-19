@@ -48,7 +48,7 @@ def build_rag_chain(retriever):
 
 def build_conversational_rag_chain(retriever):
     """Build conversational RAG chain with memory for multi-turn interactions."""
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=500)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=1000)
 
     memory = ConversationBufferWindowMemory(
         k=5,  # Keep last 5 interactions
@@ -80,11 +80,41 @@ def build_conversational_rag_chain(retriever):
     
     source_aware_retriever = SourceAwareRetriever(base_retriever=retriever)
     
+    # Custom prompt that explicitly instructs the LLM to use the provided context
+    # ConversationalRetrievalChain expects {context} and {question} placeholders
+    system_message = """You are a knowledgeable medical assistant. Use the provided context documents to answer medical questions accurately and comprehensively.
+
+CRITICAL INSTRUCTIONS:
+1. ALWAYS use the information from the provided context documents to answer MEDICAL questions.
+2. If the context contains relevant MEDICAL information, you MUST use it to provide a detailed answer.
+3. NEVER say "I don't know" if the context contains relevant medical information - always extract and present what is available.
+4. If the context doesn't contain enough information, acknowledge limitations but still provide what you can from the context.
+5. Combine information from multiple context documents if available.
+6. Be specific and cite which source file the information comes from when possible.
+7. IMPORTANT: If the question is clearly NOT medical-related (e.g., asking about geography, locations, cities, countries, recipes, programming, sports, movies, etc.), respond with: "Sorry, I can only answer medical-related questions. Please ask about diseases, symptoms, treatments, medications, health conditions, or other medical topics." Do NOT try to answer non-medical questions even if context is provided.
+
+The context below contains medical information. Use it to answer MEDICAL questions only."""
+    
+    custom_prompt = ChatPromptTemplate.from_messages([
+        ("system", system_message),
+        ("human", """Use the following pieces of context to answer the question. The context contains medical information from source documents.
+
+Context:
+{context}
+
+Question: {question}
+
+IMPORTANT: First determine if this is a medical question. If it's asking about geography, locations, cities, recipes, programming, or other non-medical topics, respond: "Sorry, I can only answer medical-related questions. Please ask about diseases, symptoms, treatments, medications, health conditions, or other medical topics."
+
+If it IS a medical question, answer based on the context provided above. If the context contains relevant medical information, you MUST use it. Do not say "I don't know" if medical information exists in the context."""),
+    ])
+    
     qa_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=source_aware_retriever,
         memory=memory,
         return_source_documents=True,
+        combine_docs_chain_kwargs={"prompt": custom_prompt},
         verbose=False
     )
     
